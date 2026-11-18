@@ -4,5 +4,5 @@ from .CreateFile import CreateFile
 
 __all__ = [
     "FileType", 
-    "CreateFile",
+    "CreateFile"
 ]

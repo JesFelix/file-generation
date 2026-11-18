@@ -3,7 +3,7 @@
 from enum import Enum
 
 class FileType(Enum):
-    DOC = {"name": "doc", "method": "create_doc"}
+    DOC = {"name": "doc", "method": "create_docx"}
     DOCX = {"name": "docx", "method": "create_docx"}
     XLS = {"name": "xls", "method": "create_xls"}
     XLSX = {"name": "xlsx", "method": "create_xlsx"}
