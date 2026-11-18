@@ -1,0 +1,20 @@
+[project]
+name = "file-generation"
+version = "0.1.0"
+description = "文件生成工具"
+readme = "README.md"
+authors = [
+    { name = "JesFelix", email = "13257008512@163.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "fastmcp>=4.2.1",
+    "python-docx>=1.2.0",
+]
+
+[project.scripts]
+file-generation = "file_generation:main"
+
+[build-system]
+requires = ["uv_build>=0.12.21,<0.13.0"]
+build-backend = "uv_build"
