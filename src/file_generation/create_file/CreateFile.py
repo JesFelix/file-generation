@@ -1,5 +1,6 @@
 
 import os
+from pathlib import Path
 import string
 import random
 from typing import Union
@@ -57,6 +58,20 @@ class CreateFile:
         if path is None:
             raise ValueError("path is None")
         os.makedirs(self.path, exist_ok=True)
+        
+        if not self.file_name.lower().endswith("." + self.file_type.value["name"]):
+            self.file_name += "." + self.file_type.value["name"]
+        self.file_path = os.path.join(self.path, self.file_name)
+
+        # print(f"""
+        #     数据构建：
+        #         file_path: {self.file_path}
+        #         file_name: {self.file_name}
+        #         file_type: {self.file_type.value["name"]}
+        #         file_content: {self.file_content} 
+        #         path: {self.path}
+        # """)
+
 
     def create_docx(self) -> None:
         """
@@ -65,28 +80,25 @@ class CreateFile:
             - str: 按行写入段落
             - int: 生成指定 KB 大小的文件，内容使用填充文本
         """
+        if self.file_type != FileType.DOCX:
+            raise ValueError("file_type must be DOCX")
+        
         if isinstance(self.file_content, int):
             # int 表示目标文件大小（KB）。先按固定大小生成 UTF-8 文本，
             # 再将文本放入合法的 DOCX 文档中保存。
-            target_size = self.file_content * 1024
-            os.makedirs(self.path, exist_ok=True)
-            txt_path = os.path.join(self.path, self.file_name)
-            if not txt_path.lower().endswith(".txt"):
-                txt_path += ".txt"
-            docx_name = os.path.splitext(self.file_name)[0] + "." + self.file_type.value["name"]
-            docx_path = os.path.join(self.path, docx_name)
+            tmp_filetype = self.file_type
+            tmp_filepath = self.file_path
+            self.file_path = self.file_path = str(Path(self.file_path).with_suffix("." + FileType.TXT.value["name"]))
+            self.file_type = FileType.TXT
+            new_txt_path = self.create_txt()
 
-            text = "固定大小内容"
-            encoded = text.encode("utf-8")
-            content = (encoded * ((target_size + len(encoded) - 1) // len(encoded)))[:target_size]
-            with open(txt_path, "wb") as txt_file:
-                txt_file.write(content)
+            # 换回来 
+            self.file_path = tmp_filepath
+            self.file_type = tmp_filetype
 
-            document = Document()
-            document.add_paragraph(content.decode("utf-8", errors="ignore"))
-            document.save(docx_path)
-            os.replace(txt_path, docx_path)
-            return self.path
+            # 修改文件后缀
+            os.rename(new_txt_path, self.file_path)
+            return self.file_path
 
         if isinstance(self.file_content, str):
             document = Document()
@@ -97,7 +109,7 @@ class CreateFile:
             if not docx_name.lower().endswith("." + self.file_type.value["name"]):
                 docx_name += "." + self.file_type.value["name"]
             document.save(os.path.join(self.path, docx_name))
-            return self.path
+            return self.file_path
 
         raise TypeError("file_content must be str or int")
 
@@ -109,25 +121,23 @@ class CreateFile:
             - str: 按行写入段落
             - int: 生成指定 KB 大小的文件，内容使用填充文本
         """
-
-        if not self.file_name.lower().endswith("." + self.file_type.value["name"]):
-            self.file_name += "." + self.file_type.value["name"]
-        file_path = os.path.join(self.path, self.file_name)
-
+        if self.file_type != FileType.TXT:
+            raise ValueError("file_type must be TXT")
+        
         if isinstance(self.file_content, int):
             size_bytes = self.file_content * 1024
             chunk = article_generation().encode("utf-8") * 1024
 
-            with open(file_path, "wb") as output_file:
+            with open(self.file_path, "wb") as output_file:
                 remaining = size_bytes
                 while remaining:
                     write_size = min(len(chunk), remaining)
                     output_file.write(chunk[:write_size])
                     remaining -= write_size
 
-            return self.path
+            return self.file_path
 
         else:
-            with open(file_path, "w", encoding="utf-8", newline="") as output_file:
+            with open(self.file_path, "w", encoding="utf-8", newline="") as output_file:
                 output_file.write(self.file_content)
-            return self.path
+            return self.file_path
